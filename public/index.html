@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doodle</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="content">
+    <div id="canvas-wrapper">
+      <canvas id="c"></canvas>
+    </div>
+    <div id="tools" class="open">
+      <section>
+        <button id="toggle-tools-btn" class="btn" title="toggle tools">
+          <i class="material-icons">chevron_left</i>
+        </button>
+      </section>
+
+      <section>
+        <div id="drawing-width-options" class="mt-2">
+
+          <label class="custom-radio-container" for="draw-radio-sm">
+            <input type="radio" name="draw-size" id="draw-radio-sm" class="draw-size-option" value="5" checked>
+            <span class="btn btn-outline-secondary icon-btn" id="draw-size-sm">
+              <div class="circle-sm"></div>
+            </span>
+          </label>
+
+          <label class="custom-radio-container" for="draw-radio-md">
+            <input type="radio" name="draw-size" id="draw-radio-md" class="draw-size-option" value="10">
+            <span class="btn btn-outline-secondary icon-btn" id="draw-size-md">
+              <div class="circle-md"></div>
+            </span>
+          </label>
+          
+          <label class="custom-radio-container" for="draw-radio-lg">
+            <input type="radio" name="draw-size" id="draw-radio-lg" class="draw-size-option" value="25">
+            <span class="btn btn-outline-secondary icon-btn" id="draw-size-lg">
+              <div class="circle-lg"></div>
+            </span>
+          </label>
+
+          <label class="custom-radio-container" for="draw-radio-xl">
+            <input type="radio" name="draw-size" id="draw-radio-xl" class="draw-size-option" value="50">
+            <span class="btn btn-outline-secondary icon-btn" id="draw-size-xl">
+              <div class="circle-xl"></div>
+            </span>
+          </label>
+
+        </div>
+      </section>
+
+      <section class="mb-2">
+        <input type="color" value="#fff" id="drawing-color" title="color picker">
+      </section>
+
+      <!-- <section>
+        <select id="drawing-mode-selector" wtx-context="85A8DC5D-4849-4ABF-86BC-68247FD4C6AE">
+          <option>Pencil</option>
+          <option>Spray</option>
+        </select>
+      </section> -->
+      <br>
+
+      <section>
+        <button id="undo-stroke" class="btn btn-outline-secondary icon-btn mb-2" title="undo">
+          <i class="material-icons">undo</i>
+        </button>
+        <button id="clear-canvas" class="btn btn-outline-danger icon-btn mb-2" title="clear">
+          <i class="material-icons">delete</i>
+        </button>
+        <a id="save-image" class="btn btn-outline-primary icon-btn" title="save">
+          <i class="material-icons">save</i>
+        </a>
+      </section>
+    </div>
+  </main>
+    
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- <script>
+    var socket = io();
+  </script> -->
+</body>
+<script src="fabric.js"></script>
+<script src="draw.js"></script>
+<script src="index.js"></script>
+</html>
