@@ -1,0 +1,9 @@
+FOR THE CLIENT
+_______________________________________________________________
+Emitters                    | Listeners
+----------------------------|----------------------------------
+createRoom(name)            | roomCreated(roomId, uid)
+joinRoom(name, roomId)      | userJoined(name), joinedRoom(uid)
+draw(uid, state)            | draw(state)
+clear(roomId)               | clear
+disconnected                | userLeft(name)

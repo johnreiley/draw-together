@@ -1,0 +1,133 @@
+.draw-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+  background-color: #222;
+}
+
+/* BUTTONS */
+
+.icon-btn, .icon-btn-left, .icon-btn-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* width: fit-content; */
+}
+
+
+
+/* CONTENT */
+
+#canvas-wrapper {
+  width: 100%;
+  height: 100%;
+  margin: 1em;
+  max-height: 600px;
+  max-width: 600px;
+  background-color: #fff;
+}
+#tools {
+  display: flex;
+  position: fixed;
+  top: 0;
+  right: -85px;
+  flex-direction: column;
+  width: 85px;
+  padding: 10px;
+  background-color: #fff;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2);
+  border-bottom-left-radius: 10px;
+  border-right: none;
+  border-top: none;
+  transition: right 0.2s;
+}
+#tools.open {
+  right: 0;
+}
+  #tools #clear-canvas,
+  #tools #undo-stroke {
+    width: 100%;
+  }
+  #toggle-tools-btn {
+    background-color: #fff;
+    position: relative;
+    right: 40px;
+    padding: 0;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+  }
+  #toggle-tools-btn:hover {
+    right: 45px;
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+  }
+  #tools.open #toggle-tools-btn {
+    box-shadow: none;
+    right: 0;
+  }
+  #toggle-tools-btn .material-icons {
+    font-size: 32px;
+    line-height: 42px;
+  }
+  #tools.open #toggle-tools-btn .material-icons {
+    transform: rotate(180deg);
+  }
+
+
+.custom-radio-container {
+  display: flex;
+  width: 100%;
+  margin-bottom: 0.5em;
+}
+input[id^="draw-radio-"] {
+  opacity: 0;
+  position: absolute;
+}
+input[id^="draw-radio-"]:checked ~ span[id^="draw-size-"] {
+  background-color: #ddd;
+}
+span[id^="draw-size-"] {
+  width: 100%;
+  height: 50px;
+  padding: 0;
+}
+  div[class^="circle-"] {
+    background-color: black;
+    border-radius: 100%;
+  }
+  .circle-sm {
+    width: 5px;
+    height: 5px;
+  }
+  .circle-md {
+    width: 10px;
+    height: 10px;
+  }
+  .circle-lg {
+    width: 20px;
+    height: 20px;
+  }
+  .circle-xl {
+    width: 40px;
+    height: 40px;
+  }
+
+#drawing-line-width {
+  max-width: 100%;
+  margin: 0;
+}
+
+#drawing-width-options {
+  display: flex;
+  flex-direction: column;
+}
+
+#drawing-color {
+  width: 100%;
+  padding: 5px;
+  border-radius: 5px;
+  height: 50px;
+  cursor: pointer;
+}
