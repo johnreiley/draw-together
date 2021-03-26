@@ -84,8 +84,9 @@ function registerEvents(io, socket) {
   /****** CLEAR ******/ 
   socket.on('clear', () => {
     let roomId = socketIdRoomDictionary[socket.id];
+    let name = getNameFromSocketId(socket.id);
     rooms[roomId].canvasState = {}
-    io.to(roomId).emit('clear');
+    socket.broadcast.to(roomId).emit('clear', name);
   })
 
   /****** DISCONNECT ******/ 
@@ -100,13 +101,24 @@ function registerEvents(io, socket) {
         rooms[roomId].users = rooms[roomId].users.filter(u => u.socketId !== socket.id);
       }
       
-      if (rooms[roomId].users > 0) {
+      if (rooms[roomId].users.length > 0) {
         io.to(roomId).emit('userLeft', name);
       } else {
         delete rooms[roomId];
+        console.log('DELETED ROOM: ', roomId);
       }
     }
   })
 }
 
 module.exports = registerEvents;
+
+
+function getNameFromSocketId(socketId) {
+  let roomId = socketIdRoomDictionary[socketId];
+  if (roomId && rooms[roomId] && rooms[roomId].users) {
+    return rooms[roomId].users.find(u => u.socketId === socketId).name;
+  } else {
+    return '';
+  }
+}

@@ -4,6 +4,6 @@ Emitters                    | Listeners
 ----------------------------|----------------------------------
 createRoom(name)            | roomCreated(roomId, uid)
 joinRoom(name, roomId)      | userJoined(name), joinedRoom(uid)
-draw(uid, state)            | draw(state)
-clear(roomId)               | clear
+draw(state)                 | draw(state)
+clear()                     | clear(name)
 disconnected                | userLeft(name)

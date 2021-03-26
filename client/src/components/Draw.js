@@ -1,6 +1,7 @@
 import './Draw.css';
 import { useState, useEffect, useRef } from 'react';
 import Socket from '../services/SocketService';
+import { generateToast } from '../services/ToastService';
 const fabric = require('fabric').fabric;
 
 function Draw({uid}) {
@@ -50,12 +51,15 @@ function Draw({uid}) {
           setHistory([...history, JSON.stringify(canvas)]);
         });
       });
-      Socket.on('clear', () => {
+      Socket.on('clear', (name) => {
         setHistory([]);
         newCanvas.clear();
         newCanvas.setBackgroundColor('#ffffff');
+        generateToast(`<strong>${name}</strong> cleared the drawing`, 2000);
       });
       Socket.on('joinedRoom', handleJoinedRoom);
+      Socket.on('userJoined', handleUserJoined);
+      Socket.on('userLeft', handleUserLeft);
     }
 
     return () => { canvas.dispose() }
@@ -104,8 +108,15 @@ function Draw({uid}) {
   }
 
   function handleJoinedRoom({uid, canvasState}) {
-
     loadState(canvasState);
+  }
+
+  function handleUserJoined(name) {
+    generateToast(`<strong>${name}</strong> joined`, 2000);
+  }
+
+  function handleUserLeft(name) {
+    generateToast(`<strong>${name}</strong> left`, 2000);
   }
 
   /*****************************************************

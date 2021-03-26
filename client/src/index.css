@@ -31,7 +31,7 @@ footer {
   display: block;
   text-align: center;
   position: absolute;
-  bottom: 0;
+  bottom: 0.5em;
   width: 100%;
 }
 
@@ -94,3 +94,18 @@ label {
 }
 
 
+/*************** TOASTS *****************/
+.toast {
+  position: absolute;
+  z-index: 2000;
+  top: 10px;
+  left: 20px;
+  transition: top 0.5s, opacity 0.5s;
+  width: 250px;
+  backdrop-filter: blur(5px);
+}
+
+.toast-show {
+  opacity: 1;
+  top: 20px;
+}

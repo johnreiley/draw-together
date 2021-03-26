@@ -19,10 +19,10 @@ function Join() {
 
   return (
     <>
-      <div className="row">
+      <div className="row m-2">
         <Header />
       </div>
-      <div className="row">
+      <div className="row m-2">
         <form onSubmit={onSubmit}>
           <div className="form-group">
             <label htmlFor="roomCodeInput" className="text-uppercase">Room Code</label>

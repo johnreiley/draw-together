@@ -13,10 +13,10 @@ function CreateRoom() {
 
   return (
     <>
-      <div className="row">
+      <div className="row m-2">
         <Header />
       </div>
-      <div className="row">
+      <div className="row m-2">
         <form onSubmit={onSubmit}>
           <div className="form-group">
             <label htmlFor="nameInput" className="text-uppercase">Name</label>

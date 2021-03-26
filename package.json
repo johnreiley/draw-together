@@ -1,10 +1,10 @@
 {
-  "name": "test-google-cloud-server",
-  "version": "1.0.0",
+  "name": "draw-together",
+  "version": "0.2.0",
   "description": "",
-  "main": "index.js",
+  "main": "./server/index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node ./server/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "John Reiley",
