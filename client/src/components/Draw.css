@@ -43,10 +43,15 @@
   border-top: none;
   transition: right 0.2s;
 }
-#tools.open {
-  right: 0;
-  overflow-y: scroll;
-}
+  #tools.open {
+    right: 0;
+    overflow-y: scroll;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  #tools.open::-webkit-scrollbar {
+    display: none;
+  }
   #tools #clear-canvas,
   #tools #undo-stroke {
     width: 100%;

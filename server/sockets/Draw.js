@@ -191,8 +191,8 @@ function filterExistingPaths(newState, oldState) {
   let newPaths = newState.filter(e1 => {
     // if the path doesn't match with a path in the state, return it (because it's a new one)
     let match = oldState.find(e2 => {
-      return (e2.top === e1.top && e2.left === e2.left && 
-        e2.stroke === e1.stroke && e2.path.length === e1.path.length);
+      return (e2 !== undefined && e1 !== undefined && e2.top === e1.top && 
+        e2.left === e1.left && e2.stroke === e1.stroke && e2.path.length === e1.path.length);
     });
     return match === undefined;
   });
