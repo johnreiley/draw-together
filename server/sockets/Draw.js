@@ -13,10 +13,11 @@ let roomDefinition = {
     {
       socketId: 'sj2i3kn3jkrj3kjr',
       uid: '283nj2-jhjhj2r-2j3rk3rr',
-      name: 'John'
+      name: 'John',
+      path: []
     }
   ],
-  canvasState: {}
+  state: []
 }
 
 /**
@@ -39,8 +40,10 @@ function registerEvents(io, socket) {
       users: [{
         socketId: socket.id,
         uid: uid,
-        name: name
+        name: name,
+        path: []
       }],
+      state: []
     };
     socketIdRoomDictionary[socket.id] = roomId;
     socket.join(roomId);
@@ -58,13 +61,14 @@ function registerEvents(io, socket) {
         { 
           socketId: socket.id,
           uid: uid, 
-          name: name 
+          name: name,
+          path: []
         }
       )
       socketIdRoomDictionary[socket.id] = roomId;
-      let canvasState = rooms[roomId].canvasState;
+      let state = rooms[roomId].state;
       socket.join(roomId);
-      socket.emit('joinedRoom', {uid, canvasState});
+      socket.emit('joinedRoom', {uid, state});
       socket.broadcast.to(roomId).emit('userJoined', name);
     } else {
       // send back bad response
@@ -73,21 +77,49 @@ function registerEvents(io, socket) {
 
   /****** DRAW ******/ 
   socket.on('draw', ({uid, state}) => {
+    state = JSON.parse(state);
+    // console.log(state);
     let roomId = socketIdRoomDictionary[socket.id];
-    console.log('ROOM ID: ', roomId);
-    console.log('USER DREW: ', rooms[roomId].users.find(u => u.socketId === socket.id));
-    console.log('UID: ', uid);
-    rooms[roomId].canvasState = state;
-    socket.broadcast.to(roomId).emit('draw', state);
+    const newPath = filterExistingPaths(state['objects'], rooms[roomId].state['objects']);
+    console.log("newPath length: ", newPath.length);
+    // console.log('ROOM ID: ', roomId);
+    // console.log('USER DREW: ', rooms[roomId].users.find(u => u.socketId === socket.id));
+    // console.log('UID: ', uid);
+    let user = rooms[roomId].users.find(u => u.socketId === socket.id);
+    user.path.push([...newPath][0]);
+    // console.log("PATH LENGTH: ", user.path.length);
+    let newState = state;
+    newState['objects'] = rooms[roomId].users.flatMap(u => u.path);
+    rooms[roomId].state = newState;
+    // console.log('ROOM STATE LENGTH: ', rooms[roomId].state.length);
+    socket.broadcast.to(roomId).emit('draw', JSON.stringify(rooms[roomId].state));
   });
 
   /****** CLEAR ******/ 
   socket.on('clear', () => {
-    let roomId = socketIdRoomDictionary[socket.id];
-    let name = getNameFromSocketId(socket.id);
-    rooms[roomId].canvasState = {}
-    socket.broadcast.to(roomId).emit('clear', name);
+    const roomId = socketIdRoomDictionary[socket.id];
+    const user = rooms[roomId].users.find(u => u.socketId === socket.id);
+    user.path = [];
+    let newState = rooms[roomId].state;
+    newState['objects'] = rooms[roomId].users.flatMap(u => u.path);
+    rooms[roomId].state = newState;
+    // socket.broadcast.to(roomId).emit('clear', {name: user.name, state: newState});
+    io.in(roomId).emit('clear', {name: user.name, state: JSON.stringify(newState)});
   })
+
+  /****** UNDO ******/ 
+  socket.on('undo', (prevState) => {
+    prevState = JSON.parse(prevState);
+    let roomId = socketIdRoomDictionary[socket.id];
+    const user = getUserFromSocketId(socket.id);
+    if (user !== undefined) {
+      user.path = prevState;
+      let newState = rooms[roomId].state;
+      newState['objects'] = rooms[roomId].users.flatMap(u => u.path);
+      rooms[roomId].state = newState;
+      io.in(roomId).emit('undo', JSON.stringify(rooms[roomId].state));
+    }
+  });
 
   /****** DISCONNECT ******/ 
   socket.on('disconnect', () => {
@@ -121,4 +153,49 @@ function getNameFromSocketId(socketId) {
   } else {
     return '';
   }
+}
+function getUserFromSocketId(socketId) {
+  let roomId = socketIdRoomDictionary[socketId];
+  if (roomId && rooms[roomId] && rooms[roomId].users) {
+    return rooms[roomId].users.find(u => u.socketId === socketId);
+  } else {
+    return undefined;
+  }
+}
+
+// function filterExistingPaths(objects, state) {
+//   console.log("objects.length: ", objects.length);
+//   console.log("state.length: ", state.length);
+//   if (state.length === 0) {
+//     return objects;
+//   }
+//   return objects.filter(o => {
+//     let match = state.find(s => {
+//       let alreadyExists = (s.left === o.left && s.top === s.left && 
+//         s.stroke === o.stroke && s.path.length === o.path.length)
+//       console.log("alreadyExists: ", alreadyExists, o.left);
+//       return alreadyExists;
+//     });
+//     console.log(match);
+//     return match === undefined && o.left >= 0 && o.top >= 0;
+//   });
+// }
+
+
+
+function filterExistingPaths(newState, oldState) {
+  if (oldState === undefined) {
+    return newState;
+  }
+  // go through each path
+  let newPaths = newState.filter(e1 => {
+    // if the path doesn't match with a path in the state, return it (because it's a new one)
+    let match = oldState.find(e2 => {
+      return (e2.top === e1.top && e2.left === e2.left && 
+        e2.stroke === e1.stroke && e2.path.length === e1.path.length);
+    });
+    return match === undefined;
+  });
+
+  return newPaths;
 }

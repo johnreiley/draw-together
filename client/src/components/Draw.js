@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Socket from '../services/SocketService';
 import { generateToast } from '../services/ToastService';
 const fabric = require('fabric').fabric;
+fabric.Object.prototype.objectCaching = false;
 
 function Draw({uid}) {
   console.log("UID: ", uid);
@@ -10,10 +11,15 @@ function Draw({uid}) {
   const [isInit, setIsInit] = useState(true);
   const [brushSize, setBrushSize] = useState("5");
   const [brushColor, setBrushColor] = useState('#000000');
-  const [history, setHistory] = useState([]);
+  const [personalHistory, setPersonalHistory] = useState([]);
+  const [roomState, setRoomState] = useState([]);
   const toolbar = useRef();
   const canvasWrapper = useRef();
+  const personalHistoryRef = useRef();
+  const roomHistoryRef = useRef();
   const userId = uid;
+
+  personalHistoryRef.current = personalHistory;
 
   useEffect(() => {
     console.log("useEffect()")
@@ -22,7 +28,8 @@ function Draw({uid}) {
       setIsInit(false);
       const newCanvas = new fabric.Canvas('c', {
         isDrawingMode: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        renderOnAddRemove: false
       })
       newCanvas.setDimensions(
         {width: canvasWrapper.current.offsetWidth, height: canvasWrapper.current.offsetHeight}
@@ -37,25 +44,36 @@ function Draw({uid}) {
           {width: canvasWrapper.current.offsetWidth, height: canvasWrapper.current.offsetHeight}
         );
       }
-      newCanvas.on('path:created', () => {
-        let state = JSON.stringify(newCanvas);
-        setHistory([...history, state]);
-        console.log("HISTORY: ", history)
-        emitState(state);
+      newCanvas.on('path:created', (e) => {
+        let json = JSON.stringify(newCanvas);
+        let newPersonalState = [];
+        if (personalHistoryRef.current.length === 0) {
+          newPersonalState.push(e.path);
+        } else {
+          newPersonalState = [...personalHistoryRef.current][personalHistoryRef.current.length - 1].concat([e.path]);
+        }
+        setPersonalHistory([...personalHistoryRef.current, newPersonalState]);
+        console.log("HISTORY: ", personalHistoryRef.current);
+        emitPath(json);
       });
       setCanvas(newCanvas);
       
       Socket.on('draw', (state) => {
         newCanvas.loadFromJSON(state, () => {
           newCanvas.renderAll();
-          setHistory([...history, JSON.stringify(canvas)]);
-        });
+        })
+        setRoomState(state);
       });
-      Socket.on('clear', (name) => {
-        setHistory([]);
-        newCanvas.clear();
-        newCanvas.setBackgroundColor('#ffffff');
-        generateToast(`<strong>${name}</strong> cleared the drawing`, 2000);
+      Socket.on('clear', ({name, state}) => {
+        newCanvas.loadFromJSON(state, () => {
+          newCanvas.renderAll();
+        });
+        generateToast(`<strong>${name}</strong> cleared their drawing`, 2000);
+      });
+      Socket.on('undo', (state) => {
+        newCanvas.loadFromJSON(state, () => {
+          newCanvas.renderAll();
+        });
       });
       Socket.on('joinedRoom', handleJoinedRoom);
       Socket.on('userJoined', handleUserJoined);
@@ -74,21 +92,22 @@ function Draw({uid}) {
   }
 
   function handleClear() { 
-    resetState();
     Socket.emit('clear');
+    resetState();
   }
 
   function handleUndo() {
-    if (history.length > 1) {
+    if (personalHistory.length > 1) {
       // grab the second to last because that's the previous state
-      let prevState = history[history.length - 2];
+      let prevState = personalHistory[personalHistory.length - 2];
       // set the history excluding the last item which is the current state
-      setHistory([...history.slice(0, history.length - 1)]);
+      setPersonalHistory([...personalHistory.slice(0, personalHistory.length - 1)]);
       if (prevState === null) {
-        prevState = {};
+        prevState = JSON.stringify([]);
       }
-      updateState(prevState);
+      Socket.emit('undo', JSON.stringify(prevState));
     } else {
+      Socket.emit('undo', JSON.stringify([]));
       resetState();
     }
   }
@@ -107,8 +126,8 @@ function Draw({uid}) {
     }
   }
 
-  function handleJoinedRoom({uid, canvasState}) {
-    loadState(canvasState);
+  function handleJoinedRoom({uid, state}) {
+    loadState(state);
   }
 
   function handleUserJoined(name) {
@@ -123,31 +142,48 @@ function Draw({uid}) {
    * THESE ARE FUNCTIONS FOR MAINTAINING THE STATE OF
    * THE CANVAS.
    ****************************************************/
-  function emitState(state) {
+  function emitPath(state) {
     Socket.emit('draw', {uid: userId, state});
   }
   function saveState() {
-    setHistory([...history, JSON.stringify(canvas)]);
-    console.log("HISTORY: ", history)
-    emitState();
+    setPersonalHistory([...personalHistory, JSON.stringify(canvas)]);
+    console.log("HISTORY: ", personalHistory)
+    emitPath();
   }
   function resetState() {
-    setHistory([]);
+    setPersonalHistory([]);
     canvas.clear();
     canvas.setBackgroundColor('#ffffff');
   }
   function updateState(state) {
-    canvas.loadFromJSON(state, () => {
+    let newState = JSON.parse(JSON.stringify({...canvas, objects: state}));
+    canvas.loadFromJSON(newState, () => {
       canvas.renderAll();
-      emitState(state);
-    })
-    setCanvas(canvas);
+    });
+    emitPath(state);
+    // setCanvas(canvas);
   }
   function loadState(state) {
     canvas.loadFromJSON(state, () => {
       canvas.renderAll();
-      setHistory([...history, JSON.stringify(canvas)]);
     });
+  }
+
+  function filterExistingPaths(newState, oldState) {
+    if (oldState === undefined) {
+      return newState;
+    }
+    // go through each path
+    let newPaths = newState.filter(e1 => {
+      // if the path doesn't match with a path in the state, return it (because it's a new one)
+      let match = oldState.find(e2 => {
+        return (e2.top === e1.top && e2.left === e2.left && 
+          e2.stroke === e1.stroke && e2.path.length === e1.path.length);
+      });
+      return match === undefined;
+    });
+  
+    return newPaths;
   }
   /****************************************************/
 
@@ -244,7 +280,8 @@ function Draw({uid}) {
             id="undo-stroke" 
             className="btn btn-outline-secondary icon-btn mb-2" 
             title="undo"
-            onClick={handleUndo}>
+            onClick={handleUndo}
+            disabled={personalHistory.length === 0}>
             <i className="material-icons">undo</i>
           </button>
           <button 
